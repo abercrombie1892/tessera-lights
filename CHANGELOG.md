@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.1
+- The icon of the light shows right: its picture is copied into PSRAM, the display's blitter cannot read the flash and drew noise.
+
 ## 0.4.0
 - The tile shows the icon Home Assistant has for the light at its top right, in white: the Hue icon pack (`hue:`, 369
   icons) and the two `phu:` icons the lights use are in the plugin (a 48 px picture each, 0.8 MB of flash). A light

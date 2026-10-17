@@ -55,6 +55,7 @@ class LightTile : public tessera::Tile {
   explicit LightTile(TesseraLights *plugin) : plugin_(plugin) {}
   ~LightTile() override {
     if (card_ != nullptr && lv_obj_is_valid(card_) && shown_face_) lv_obj_set_style_bg_image_src(card_, nullptr, 0);
+    heap_caps_free(icon_px_);
     for (Face *f : {&base_, &lit_, &comp_}) {
       lv_image_cache_drop(&f->dsc);
       heap_caps_free(f->px);
@@ -156,9 +157,16 @@ class LightTile : public tessera::Tile {
     icon_dsc_.header.cf = LV_COLOR_FORMAT_A8;
     icon_dsc_.header.w = icon_dsc_.header.h = HUE_ICON_SIDE;
     icon_dsc_.header.stride = HUE_ICON_SIDE;
-    icon_dsc_.data = HUE_ICON_DATA + icon->offset;
     icon_dsc_.data_size = HUE_ICON_SIDE * HUE_ICON_SIDE;
     if (icon_shown_ != icon) {
+      // The picture is copied into PSRAM: the display's blitter cannot read the flash the pack lives in (it drew noise).
+      if (icon_px_ == nullptr) icon_px_ = static_cast<uint8_t *>(heap_caps_aligned_alloc(64, 2304, MALLOC_CAP_SPIRAM));
+      if (icon_px_ == nullptr) {
+        lv_obj_add_flag(icon_, LV_OBJ_FLAG_HIDDEN);
+        return;
+      }
+      memcpy(icon_px_, HUE_ICON_DATA + icon->offset, 2304);
+      icon_dsc_.data = icon_px_;
       icon_shown_ = icon;
       lv_image_cache_drop(&icon_dsc_);
       lv_image_set_src(icon_, nullptr);
@@ -329,6 +337,7 @@ class LightTile : public tessera::Tile {
   lv_obj_t *card_{}, *state_{}, *title_{}, *hit_{}, *icon_{};
   lv_image_dsc_t icon_dsc_{};
   const HueIcon *icon_shown_{nullptr};
+  uint8_t *icon_px_{nullptr};
   int icon_size_{0};
   std::string entity_, name_;
   int tile_{-1}, w_{0}, h_{0}, shown_{0}, composed_{-1};
