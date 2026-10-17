@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.2
+- The icon is a white picture with alpha (ARGB) in PSRAM: the display's blitter did not draw the alpha-only picture right.
+
 ## 0.4.1
 - The icon of the light shows right: its picture is copied into PSRAM, the display's blitter cannot read the flash and drew noise.
 

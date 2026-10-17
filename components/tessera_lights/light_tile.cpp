@@ -87,8 +87,6 @@ class LightTile : public tessera::Tile {
     lv_obj_set_pos(icon_, w_ - icon_size_ - ui::px(8), ui::px(8));
     lv_image_set_inner_align(icon_, LV_IMAGE_ALIGN_STRETCH);
     lv_image_set_antialias(icon_, true);
-    lv_obj_set_style_image_recolor(icon_, lv_color_hex(0xFFFFFF), 0);
-    lv_obj_set_style_image_recolor_opa(icon_, LV_OPA_COVER, 0);
     lv_obj_set_style_opa(icon_, 235, 0);
     lv_obj_add_flag(icon_, LV_OBJ_FLAG_HIDDEN);
 
@@ -154,18 +152,24 @@ class LightTile : public tessera::Tile {
       return;
     }
     icon_dsc_.header.magic = LV_IMAGE_HEADER_MAGIC;
-    icon_dsc_.header.cf = LV_COLOR_FORMAT_A8;
+    constexpr int PIXELS = HUE_ICON_SIDE * HUE_ICON_SIDE, BYTES = PIXELS * 4;
+    icon_dsc_.header.cf = LV_COLOR_FORMAT_ARGB8888;
     icon_dsc_.header.w = icon_dsc_.header.h = HUE_ICON_SIDE;
-    icon_dsc_.header.stride = HUE_ICON_SIDE;
-    icon_dsc_.data_size = HUE_ICON_SIDE * HUE_ICON_SIDE;
+    icon_dsc_.header.stride = HUE_ICON_SIDE * 4;
+    icon_dsc_.data_size = BYTES;
     if (icon_shown_ != icon) {
-      // The picture is copied into PSRAM: the display's blitter cannot read the flash the pack lives in (it drew noise).
-      if (icon_px_ == nullptr) icon_px_ = static_cast<uint8_t *>(heap_caps_aligned_alloc(64, 2304, MALLOC_CAP_SPIRAM));
+      // The picture is made white with its alpha in PSRAM: the display's blitter cannot read the flash the pack lives in
+      // (it drew noise), and it does not take an alpha-only picture either.
+      if (icon_px_ == nullptr) icon_px_ = static_cast<uint8_t *>(heap_caps_aligned_alloc(64, BYTES, MALLOC_CAP_SPIRAM));
       if (icon_px_ == nullptr) {
         lv_obj_add_flag(icon_, LV_OBJ_FLAG_HIDDEN);
         return;
       }
-      memcpy(icon_px_, HUE_ICON_DATA + icon->offset, 2304);
+      const uint8_t *alpha = HUE_ICON_DATA + icon->offset;
+      for (int i = 0; i < PIXELS; i++) {
+        icon_px_[i * 4 + 0] = icon_px_[i * 4 + 1] = icon_px_[i * 4 + 2] = 255;
+        icon_px_[i * 4 + 3] = alpha[i];
+      }
       icon_dsc_.data = icon_px_;
       icon_shown_ = icon;
       lv_image_cache_drop(&icon_dsc_);
