@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "name": "English"
+  },
+  "screen": {
+    "menu_brightness": "Brightness",
+    "menu_temperature": "Colour temperature",
+    "menu_colors": "Colours",
+    "on": "On",
+    "off": "Off",
+    "unavailable": "Unavailable"
+  },
+  "app": {
+    "name": "Lights",
+    "summary": "Lights as tiles that are their own slider, in the light's own colour.",
+    "light_name": "Light",
+    "light_example": "Ceiling",
+    "card_name": "Light"
+  }
+}

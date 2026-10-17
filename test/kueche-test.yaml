@@ -1,0 +1,30 @@
+# Local compile test only (never flashed): Tessera's jc8012p4a1 package (10-inch kitchen) plus this plugin from the working tree.
+substitutions:
+  GITHUB_REF: "screens-v0.4.88"
+  DEVICE_NAME: "tl-test-kuche"
+  DEVICE_FRIENDLY_NAME: "TL Test"
+  LANGUAGE: "de"
+
+esphome:
+  name: "tl-test-kuche"
+  friendly_name: "TL Test"
+
+packages:
+  display:
+    url: https://github.com/MaxGramser/homeassistant_espscreen
+    ref: screens-v0.4.88
+    files: [packages/jc8012p4a1.yaml]
+    refresh: 1d
+  plugin_tessera_lights: !include ../plugin.yaml
+
+external_components:
+  - source: {type: local, path: ../components}
+
+api:
+  encryption:
+    key: "IxiSXgu6l5+ZJZGOBjp+lRxeFAoVVPrjqORjPFJhOM0="
+ota:
+  - platform: esphome
+wifi:
+  ssid: "test"
+  password: "testtest12"

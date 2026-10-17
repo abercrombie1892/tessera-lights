@@ -1,0 +1,9 @@
+# What tools/preview.py shows: a light as Home Assistant would send it.
+tiles:
+  - tile: light
+    name: Decke
+    entity: light.deckenlampe_kuche
+states:
+  light.deckenlampe_kuche:
+    state: "on"
+    attributes: { brightness: 160, rgb_color: [255, 170, 80], color_temp_kelvin: 2700, supported_color_modes: [color_temp, xy] }

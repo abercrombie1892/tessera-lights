@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "name": "Deutsch"
+  },
+  "screen": {
+    "menu_brightness": "Helligkeit",
+    "menu_temperature": "Farbtemperatur",
+    "menu_colors": "Farben",
+    "on": "An",
+    "off": "Aus",
+    "unavailable": "Nicht erreichbar"
+  },
+  "app": {
+    "name": "Lichter",
+    "summary": "Lampen als Kacheln, die selbst der Regler sind, in der Farbe der Lampe.",
+    "light_name": "Licht",
+    "light_example": "Decke",
+    "card_name": "Licht"
+  }
+}

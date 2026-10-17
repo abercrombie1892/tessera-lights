@@ -1,0 +1,34 @@
+# A light as a tile that is its own slider: the tile glows in the light's own colour as far as the light is dimmed up,
+# a short tap switches it, a swipe over the tile dims it, holding opens a menu with the brightness, the colour
+# temperature and colours.
+id: tessera_lights
+version: 0.1.0
+api: "0.8"
+icon: lightbulb
+maintainer: abercrombie1892
+license: MIT
+stage: beta
+topics: [home]
+requires:
+  esphome: 2026.6.2
+  psram: true
+boards: [wavesharep4, jc8012p4a1, jc8012p4a1v2, jc8012p4a1v3]
+flash_kb: 60
+
+permissions:
+  home_assistant_actions: [light.toggle, light.turn_on, light.turn_off]
+
+tiles:
+  - id: light
+    name: light_name
+    icon: lightbulb
+    sizes: { min: 1x1, max: 4x4 }
+    memory: 1500
+    domains: [light]
+    attributes: [brightness, rgb_color, color_temp_kelvin, supported_color_modes]
+    example: light_example
+    preview: { title: "{name}" }
+
+# The menu a hold on the tile opens.
+cards:
+  - { id: light, name: card_name }
