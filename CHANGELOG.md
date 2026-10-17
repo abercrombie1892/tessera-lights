@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+- A new colour of the light shows on the tile at once (LVGL showed the picture of the old colour from its cache).
+- The lit part of the tile has the very corners of the card: it is measured on the glass and runs from edge to edge.
+
 ## 0.2.0
 - The menu of a hold as Tessera's own light card has it: three glass fields (colour as a rainbow, colour temperature,
   brightness), each with a symbol, its name and its value. The colour goes to the light as the nearest colour name.

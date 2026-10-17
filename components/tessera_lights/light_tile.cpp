@@ -42,6 +42,7 @@ class LightTile : public tessera::Tile {
   }
 
   void create(const tessera::TileContext &c) override {
+    parent_ = c.parent;
     card_ = lv_obj_get_parent(c.parent);
     entity_ = c.entity != nullptr ? c.entity : "";
     name_ = c.name != nullptr ? c.name : "";
@@ -134,19 +135,27 @@ class LightTile : public tessera::Tile {
   void set_fill_(int percent) {
     shown_ = std::clamp(percent, 0, 100);
     lv_obj_set_style_opa(fill_, shown_ == 0 ? LV_OPA_TRANSP : LV_OPA_COVER, 0);
-    // The card's whole face (the tile's area and the padding round it): the lit part runs from edge to edge.
-    const int cw = std::max(w_, card_ != nullptr ? (int) lv_obj_get_width(card_) : w_);
-    const int ch = std::max(h_, card_ != nullptr ? (int) lv_obj_get_height(card_) : h_);
-    const int px = (cw - w_) / 2, py = (ch - h_) / 2;
-    lv_obj_set_style_radius(fill_, card_ != nullptr ? lv_obj_get_style_radius(card_, LV_PART_MAIN) : ui::px(14), 0);
+    // The card's whole face, measured on the glass (the tile's area and what lies round it): the lit part runs from edge to
+    // edge with the very corners of the card, whatever the padding.
+    int cw = w_, ch = h_, ox = 0, oy = 0;
+    if (card_ != nullptr && lv_obj_is_valid(card_)) {
+      lv_area_t ca, pa;
+      lv_obj_get_coords(card_, &ca);
+      lv_obj_get_coords(parent_, &pa);
+      if (lv_area_get_width(&ca) >= w_ && lv_area_get_height(&ca) >= h_) {
+        cw = lv_area_get_width(&ca), ch = lv_area_get_height(&ca);
+        ox = ca.x1 - pa.x1, oy = ca.y1 - pa.y1;
+      }
+      lv_obj_set_style_radius(fill_, lv_obj_get_style_radius(card_, LV_PART_MAIN), 0);
+    }
     if (vertical_) {
       const int fh = ch * shown_ / 100;
       lv_obj_set_size(fill_, cw, fh);
-      lv_obj_set_pos(fill_, -px, ch - fh - py);
+      lv_obj_set_pos(fill_, ox, oy + ch - fh);
       lv_obj_set_pos(fill_image_, 0, -(ch - fh));
     } else {
       lv_obj_set_size(fill_, cw * shown_ / 100, ch);
-      lv_obj_set_pos(fill_, -px, -py);
+      lv_obj_set_pos(fill_, ox, oy);
       lv_obj_set_pos(fill_image_, 0, 0);
     }
   }
@@ -155,6 +164,10 @@ class LightTile : public tessera::Tile {
     if (card_ == nullptr || !lv_obj_is_valid(card_)) return;
     const int cw = lv_obj_get_width(card_), ch = lv_obj_get_height(card_);
     if (cw <= 0 || ch <= 0) return;
+    if (cw != face_w_ || ch != face_h_) {  // the card was laid out: the lit part follows its edge
+      face_w_ = cw, face_h_ = ch;
+      if (!dragging_) set_fill_(shown_);
+    }
     const uint32_t colour = colour_();
     const uint32_t sign = ((uint32_t) cw * 31 + ch) * 16777619u ^ colour;
     if (sign != signature_) {
@@ -162,7 +175,10 @@ class LightTile : public tessera::Tile {
       if (!make_(lit_px_, lit_cap_, lit_, cw, ch, lit(colour, 150), lit(colour, 96))) return;
       signature_ = sign;
       lv_obj_set_style_bg_image_src(card_, nullptr, 0);
+      // LVGL keeps a decoded picture by its address: the same address again would show the old colour.
+      lv_image_set_src(fill_image_, nullptr);
       lv_image_set_src(fill_image_, &lit_);
+      lv_obj_invalidate(fill_);
       lv_obj_invalidate(card_);
     }
     if (lv_obj_get_style_bg_image_src(card_, LV_PART_MAIN) != &base_) lv_obj_set_style_bg_image_src(card_, &base_, 0);
@@ -265,9 +281,9 @@ class LightTile : public tessera::Tile {
   }
 
   TesseraLights *plugin_;
-  lv_obj_t *card_{}, *fill_{}, *fill_image_{}, *state_{}, *title_{}, *hit_{};
+  lv_obj_t *parent_{}, *card_{}, *fill_{}, *fill_image_{}, *state_{}, *title_{}, *hit_{};
   std::string entity_, name_;
-  int tile_{-1}, w_{0}, h_{0}, shown_{0};
+  int tile_{-1}, w_{0}, h_{0}, shown_{0}, face_w_{0}, face_h_{0};
   bool vertical_{false}, dragging_{false}, held_{false}, percent_{true};
   lv_point_t start_{0, 0};
   uint32_t hold_until_{0}, signature_{0};
