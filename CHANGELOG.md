@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+- The menu as Tessera's: the rings of the colour and temperature sliders are filled with the colour they stand at, the
+  brightness knob is a thin tick.
+
 ## 0.2.1
 - A new colour of the light shows on the tile at once (LVGL showed the picture of the old colour from its cache).
 - The lit part of the tile has the very corners of the card: it is measured on the glass and runs from edge to edge.

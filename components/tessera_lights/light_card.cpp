@@ -105,6 +105,13 @@ class LightCard : public tessera::Card {
     lv_obj_set_style_bg_color(bright_, lv_color_hex(colour), LV_PART_INDICATOR);
     lv_obj_set_style_bg_opa(bright_, LV_OPA_COVER, LV_PART_INDICATOR);
     lv_obj_add_event_cb(bright_, on_bright_, LV_EVENT_ALL, this);
+    // The brightness knob is a thin tick, as Tessera draws it, not a ring.
+    lv_obj_set_style_bg_color(bright_, lv_color_hex(0xF4F1EC), LV_PART_KNOB);
+    lv_obj_set_style_bg_opa(bright_, LV_OPA_COVER, LV_PART_KNOB);
+    lv_obj_set_style_border_width(bright_, 0, LV_PART_KNOB);
+    lv_obj_set_style_radius(bright_, ui::px(2), LV_PART_KNOB);
+    lv_obj_set_style_pad_hor(bright_, ui::px(2), LV_PART_KNOB);
+    lv_obj_set_style_pad_ver(bright_, -ui::px(8), LV_PART_KNOB);
     show_();
   }
 
@@ -204,8 +211,17 @@ class LightCard : public tessera::Card {
   }
 
   void show_() {
-    if (hue_ != nullptr) ui::set_text(value_hue_, std::to_string(lv_slider_get_value(hue_)) + "°");
-    if (temp_ != nullptr) ui::set_text(value_temp_, std::to_string(lv_slider_get_value(temp_)) + " K");
+    // The rings are filled with the colour they stand at, as Tessera's are.
+    if (hue_ != nullptr) {
+      ui::set_text(value_hue_, std::to_string(lv_slider_get_value(hue_)) + "°");
+      lv_obj_set_style_bg_color(hue_, hue_colour((float) lv_slider_get_value(hue_)), LV_PART_KNOB);
+      lv_obj_set_style_bg_opa(hue_, LV_OPA_COVER, LV_PART_KNOB);
+    }
+    if (temp_ != nullptr) {
+      ui::set_text(value_temp_, std::to_string(lv_slider_get_value(temp_)) + " K");
+      lv_obj_set_style_bg_color(temp_, lv_color_hex(kelvin_rgb(lv_slider_get_value(temp_))), LV_PART_KNOB);
+      lv_obj_set_style_bg_opa(temp_, LV_OPA_COVER, LV_PART_KNOB);
+    }
     ui::set_text(value_bright_, std::to_string(lv_slider_get_value(bright_)) + " %");
   }
 
