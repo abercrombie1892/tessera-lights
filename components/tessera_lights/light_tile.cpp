@@ -3,6 +3,7 @@
 #include <vector>
 #include "esp_heap_caps.h"
 #include "ground.h"
+#include "hue_icons.h"
 #include "tessera_lights.h"
 
 // private LVGL header (misc/cache/instance/lv_image_cache.h), not in lvgl.h
@@ -21,6 +22,19 @@ constexpr uint32_t WARM_WHITE = 0xFFB46B;
 void white(lv_obj_t *label) {
   if (!lv_color_eq(lv_obj_get_style_text_color(label, LV_PART_MAIN), lv_color_hex(0xFFFFFF)))
     lv_obj_set_style_text_color(label, lv_color_hex(0xFFFFFF), 0);
+}
+
+// The picture of an icon of the pack, by the name Home Assistant gives it ("hue:go", "phu:play"); null when it is not there.
+const HueIcon *find_icon(const std::string &name) {
+  size_t low = 0, high = sizeof(HUE_ICONS) / sizeof(HUE_ICONS[0]);
+  while (low < high) {
+    const size_t mid = (low + high) / 2;
+    const int order = strcmp(HUE_ICONS[mid].name, name.c_str());
+    if (order == 0) return &HUE_ICONS[mid];
+    if (order < 0) low = mid + 1;
+    else high = mid;
+  }
+  return nullptr;
 }
 
 // One of the three pictures of the card's face.
@@ -56,12 +70,26 @@ class LightTile : public tessera::Tile {
     h_ = c.height;
     vertical_ = h_ > w_ * 12 / 10;
     percent_ = std::string(c.options["percent"] | "show") == "show";
+    symbol_ = std::string(c.options["symbol"] | "show") == "show";
 
     state_ = ui::label(c.parent, Font::BODY, theme::INK);
     lv_obj_set_pos(state_, ui::px(8), ui::px(6));
     lv_obj_set_size(state_, w_ - ui::px(16), ui::line_height(Font::BODY));
     title_ = ui::label(c.parent, Font::BODY_LARGE, theme::INK);
     show_name_(name_);
+
+    // The light's icon, from Home Assistant, at the top right in white.
+    icon_size_ = std::min(ui::mm(7), w_ / 4);
+    icon_ = lv_image_create(c.parent);
+    lv_obj_remove_flag(icon_, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_size(icon_, icon_size_, icon_size_);
+    lv_obj_set_pos(icon_, w_ - icon_size_ - ui::px(8), ui::px(8));
+    lv_image_set_inner_align(icon_, LV_IMAGE_ALIGN_STRETCH);
+    lv_image_set_antialias(icon_, true);
+    lv_obj_set_style_image_recolor(icon_, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_image_recolor_opa(icon_, LV_OPA_COVER, 0);
+    lv_obj_set_style_opa(icon_, 235, 0);
+    lv_obj_add_flag(icon_, LV_OBJ_FLAG_HIDDEN);
 
     // The touch layer over everything: it takes the tap, the swipe and the hold.
     hit_ = lv_obj_create(c.parent);
@@ -97,7 +125,10 @@ class LightTile : public tessera::Tile {
       if (m == "color_temp") info.ct = true;
       if (m == "xy" || m == "hs" || m == "rgb" || m == "rgbw" || m == "rgbww") info.color = true;
     }
+    const std::string icon = attributes["icon"] | "";
+    if (!icon.empty()) info.icon = icon;
     if (name_.empty()) show_name_(info.name);
+    show_icon_();
     refresh_();
   }
 
@@ -112,6 +143,28 @@ class LightTile : public tessera::Tile {
     if (info.rgb != 0) return info.rgb;
     if (info.kelvin > 0) return kelvin_rgb(info.kelvin);
     return WARM_WHITE;
+  }
+
+  // The icon Home Assistant has for the light, when the pack has it (else none).
+  void show_icon_() {
+    const HueIcon *icon = symbol_ ? find_icon(plugin_->info(entity_).icon) : nullptr;
+    if (icon == nullptr) {
+      lv_obj_add_flag(icon_, LV_OBJ_FLAG_HIDDEN);
+      return;
+    }
+    icon_dsc_.header.magic = LV_IMAGE_HEADER_MAGIC;
+    icon_dsc_.header.cf = LV_COLOR_FORMAT_A8;
+    icon_dsc_.header.w = icon_dsc_.header.h = HUE_ICON_SIDE;
+    icon_dsc_.header.stride = HUE_ICON_SIDE;
+    icon_dsc_.data = HUE_ICON_DATA + icon->offset;
+    icon_dsc_.data_size = HUE_ICON_SIDE * HUE_ICON_SIDE;
+    if (icon_shown_ != icon) {
+      icon_shown_ = icon;
+      lv_image_cache_drop(&icon_dsc_);
+      lv_image_set_src(icon_, nullptr);
+      lv_image_set_src(icon_, &icon_dsc_);
+    }
+    lv_obj_remove_flag(icon_, LV_OBJ_FLAG_HIDDEN);
   }
 
   void refresh_() {
@@ -273,10 +326,13 @@ class LightTile : public tessera::Tile {
   }
 
   TesseraLights *plugin_;
-  lv_obj_t *card_{}, *state_{}, *title_{}, *hit_{};
+  lv_obj_t *card_{}, *state_{}, *title_{}, *hit_{}, *icon_{};
+  lv_image_dsc_t icon_dsc_{};
+  const HueIcon *icon_shown_{nullptr};
+  int icon_size_{0};
   std::string entity_, name_;
   int tile_{-1}, w_{0}, h_{0}, shown_{0}, composed_{-1};
-  bool vertical_{false}, dragging_{false}, held_{false}, percent_{true}, shown_face_{false};
+  bool vertical_{false}, dragging_{false}, held_{false}, percent_{true}, symbol_{true}, shown_face_{false};
   lv_point_t start_{0, 0};
   uint32_t hold_until_{0}, signature_{0};
   Face base_, lit_, comp_;

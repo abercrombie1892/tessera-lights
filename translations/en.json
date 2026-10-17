@@ -19,6 +19,8 @@
     "percent": "Percent on the tile",
     "percent_hint": "The brightness as a number at the top left, and “Off” for a light that is off.",
     "percent_show": "Show",
-    "percent_hide": "Hide"
+    "percent_hide": "Hide",
+    "symbol": "Symbol of the light",
+    "symbol_hint": "The icon you gave the light in Home Assistant (Hue icons), at the top right of the tile."
   }
 }

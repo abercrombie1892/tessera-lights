@@ -19,6 +19,8 @@
     "percent": "Prozent auf der Kachel",
     "percent_hint": "Die Helligkeit als Zahl oben links, und „Aus“ bei einer ausgeschalteten Lampe.",
     "percent_show": "Anzeigen",
-    "percent_hide": "Ausblenden"
+    "percent_hide": "Ausblenden",
+    "symbol": "Symbol der Lampe",
+    "symbol_hint": "Das Symbol, das du der Lampe in Home Assistant gegeben hast (Hue-Symbole), oben rechts auf der Kachel."
   }
 }

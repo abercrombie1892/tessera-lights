@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0
+- The tile shows the icon Home Assistant has for the light at its top right, in white: the Hue icon pack (`hue:`, 369
+  icons) and the two `phu:` icons the lights use are in the plugin (a 48 px picture each, 0.8 MB of flash). A light
+  without an icon, or with one of another pack, shows none. The option "Symbol of the light" hides it.
+
 ## 0.3.0
 - A light that is off keeps the colour it last had on the tile (Home Assistant sends none then).
 - The lit part of the tile is drawn into the card's own background picture, no object of its own over the card: its corners

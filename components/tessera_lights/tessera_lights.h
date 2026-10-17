@@ -14,6 +14,7 @@ struct LightInfo {
   int percent = 0;        // 0 to 100, what the light is dimmed up to
   int kelvin = 0;         // its colour temperature, 0 when it has none
   uint32_t rgb = 0;       // its colour, 0 when it has none
+  std::string icon;       // the icon Home Assistant has for it ("hue:go"), "" when it has none
 };
 
 class TesseraLights : public Component, public tessera::Plugin {
