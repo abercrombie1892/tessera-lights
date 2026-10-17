@@ -75,13 +75,16 @@ class LightCard : public tessera::Card {
   void open(const tessera::CardContext &c) override {
     entity_ = c.entity != nullptr ? c.entity : "";
     const LightInfo &info = plugin_->info(entity_);
-    const int w = std::min(c.width - 2 * ui::px(24), ui::mm(130));
-    const int x = (c.width - w) / 2, gap = ui::px(12);
-    const int pad = ui::px(14), slider_h = ui::mm(8);
-    const int panel_h = pad + ui::line_height(Font::BODY_LARGE) + ui::px(10) + slider_h + pad;
+    // As Tessera's own light card draws it, measured on a photo of it: the fields 48 % of the width and 11.5 % of the
+    // height high, the track a third of that, the block a little under the middle.
+    const int w = c.width * 48 / 100, x = (c.width - w) / 2;
+    panel_h_ = std::max(ui::line_height(Font::BODY_LARGE) + ui::px(40), c.height * 115 / 1000);
+    pad_ = panel_h_ * 13 / 100;
+    track_h_ = std::max(ui::px(18), panel_h_ * 31 / 100);
+    const int gap = panel_h_ * 12 / 100, pad = pad_, slider_h = track_h_, panel_h = panel_h_;
     const int panels = 1 + (info.color ? 1 : 0) + (info.ct ? 1 : 0);
     const int total = panels * panel_h + (panels - 1) * gap;
-    int y = std::max(ui::px(12), (c.height - total) / 2 - ui::px(10));
+    int y = std::max(ui::px(8), (c.height - total) / 2 + c.height * 3 / 100);
 
     if (info.color) {
       hue_ = slider_(c.parent, x, y, w, ICON_PALETTE, plugin_->text("menu_colors"), 0, 359,
@@ -111,7 +114,7 @@ class LightCard : public tessera::Card {
     lv_obj_set_style_border_width(bright_, 0, LV_PART_KNOB);
     lv_obj_set_style_radius(bright_, ui::px(2), LV_PART_KNOB);
     lv_obj_set_style_pad_hor(bright_, ui::px(2), LV_PART_KNOB);
-    lv_obj_set_style_pad_ver(bright_, -ui::px(8), LV_PART_KNOB);
+    lv_obj_set_style_pad_ver(bright_, -track_h_ * 22 / 100, LV_PART_KNOB);
     show_();
   }
 
@@ -143,8 +146,10 @@ class LightCard : public tessera::Card {
         const lv_color_t c = hue_colour(t * 359);
         want[0] = c.red, want[1] = c.green, want[2] = c.blue;
       } else {
-        const uint32_t rgb = kelvin_rgb((int) (KELVIN_LOW + t * (KELVIN_HIGH - KELVIN_LOW)));
-        want[0] = (rgb >> 16) & 0xFF, want[1] = (rgb >> 8) & 0xFF, want[2] = rgb & 0xFF;
+        static constexpr float WARM[3] = {255, 184, 77}, WHITE[3] = {255, 250, 238}, COOL[3] = {140, 186, 255};
+        const bool first = t < 0.45f;
+        const float f = first ? t / 0.45f : (t - 0.45f) / 0.55f;
+        for (int k = 0; k < 3; k++) want[k] = first ? WARM[k] + (WHITE[k] - WARM[k]) * f : WHITE[k] + (COOL[k] - WHITE[k]) * f;
       }
     });
     describe(s.dsc, s.px, w, h);
@@ -154,14 +159,13 @@ class LightCard : public tessera::Card {
   // A glass field: symbol, name and value on one line, the slider under it. `track` is the picture the slider runs over.
   lv_obj_t *slider_(lv_obj_t *parent, int x, int y, int w, uint32_t icon, const char *text, int low, int high, int value,
                     lv_obj_t *&value_label, const lv_image_dsc_t *track) {
-    const int pad = ui::px(14), slider_h = ui::mm(8);
-    const int h = pad + ui::line_height(Font::BODY_LARGE) + ui::px(10) + slider_h + pad;
+    const int pad = pad_, slider_h = track_h_, h = panel_h_;
     lv_obj_t *box = lv_obj_create(parent);
     lv_obj_remove_style_all(box);
     lv_obj_remove_flag(box, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_pos(box, x, y);
     lv_obj_set_size(box, w, h);
-    lv_obj_set_style_radius(box, ui::px(18), 0);
+    lv_obj_set_style_radius(box, h * 18 / 100, 0);
     lv_obj_set_style_bg_color(box, lv_color_hex(0xFFFFFF), 0);
     lv_obj_set_style_bg_opa(box, 18, 0);  // white 7 %, as Tessera's glass
     lv_obj_set_style_border_width(box, 1, 0);
@@ -181,7 +185,7 @@ class LightCard : public tessera::Card {
     lv_obj_set_size(value_label, w / 2 - pad, ui::line_height(Font::BODY_LARGE));
     lv_obj_set_style_text_align(value_label, LV_TEXT_ALIGN_RIGHT, 0);
 
-    const int sy = pad + ui::line_height(Font::BODY_LARGE) + ui::px(10), sw = w - 2 * pad;
+    const int sy = h - pad - slider_h, sw = w - 2 * pad;  // the track at the foot of the field
     if (track != nullptr) {
       lv_obj_t *image = lv_image_create(box);
       lv_obj_remove_flag(image, LV_OBJ_FLAG_CLICKABLE);
@@ -201,10 +205,10 @@ class LightCard : public tessera::Card {
     lv_obj_set_style_bg_opa(slider, LV_OPA_TRANSP, LV_PART_INDICATOR);
     // The knob a ring, as Tessera draws it.
     lv_obj_set_style_bg_opa(slider, LV_OPA_TRANSP, LV_PART_KNOB);
-    lv_obj_set_style_border_width(slider, ui::px(3), LV_PART_KNOB);
-    lv_obj_set_style_border_color(slider, lv_color_hex(0xF4F1EC), LV_PART_KNOB);
+    lv_obj_set_style_border_width(slider, std::max(2, slider_h / 14), LV_PART_KNOB);
+    lv_obj_set_style_border_color(slider, lv_color_hex(0xDCE8FF), LV_PART_KNOB);
     lv_obj_set_style_radius(slider, LV_RADIUS_CIRCLE, LV_PART_KNOB);
-    lv_obj_set_style_pad_all(slider, ui::px(3), LV_PART_KNOB);
+    lv_obj_set_style_pad_all(slider, std::max(2, slider_h * 14 / 100), LV_PART_KNOB);
     lv_obj_set_style_shadow_width(slider, 0, LV_PART_KNOB);
     lv_obj_set_ext_click_area(slider, ui::px(10));
     return slider;
@@ -263,6 +267,7 @@ class LightCard : public tessera::Card {
 
   TesseraLights *plugin_;
   std::string entity_;
+  int panel_h_{0}, pad_{0}, track_h_{0};
   lv_obj_t *hue_{}, *temp_{}, *bright_{}, *value_hue_{}, *value_temp_{}, *value_bright_{};
   std::vector<Strip> strips_;
   uint32_t hold_until_{0};

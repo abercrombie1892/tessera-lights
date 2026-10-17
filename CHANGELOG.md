@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3
+- The menu follows Tessera's own light card in its proportions (measured on a photo of it): fields 48 % of the width,
+  11.5 % of the height, the track at the foot of each field, the block a little under the middle, the temperature
+  slider from warm yellow through white to light blue.
+
 ## 0.2.2
 - The menu as Tessera's: the rings of the colour and temperature sliders are filled with the colour they stand at, the
   brightness knob is a thin tick.
