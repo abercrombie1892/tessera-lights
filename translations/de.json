@@ -15,6 +15,10 @@
     "summary": "Lampen als Kacheln, die selbst der Regler sind, in der Farbe der Lampe.",
     "light_name": "Licht",
     "light_example": "Decke",
-    "card_name": "Licht"
+    "card_name": "Licht",
+    "percent": "Prozent auf der Kachel",
+    "percent_hint": "Die Helligkeit als Zahl oben links, und „Aus“ bei einer ausgeschalteten Lampe.",
+    "percent_show": "Anzeigen",
+    "percent_hide": "Ausblenden"
   }
 }

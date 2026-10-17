@@ -15,6 +15,10 @@
     "summary": "Lights as tiles that are their own slider, in the light's own colour.",
     "light_name": "Light",
     "light_example": "Ceiling",
-    "card_name": "Light"
+    "card_name": "Light",
+    "percent": "Percent on the tile",
+    "percent_hint": "The brightness as a number at the top left, and “Off” for a light that is off.",
+    "percent_show": "Show",
+    "percent_hide": "Hide"
   }
 }

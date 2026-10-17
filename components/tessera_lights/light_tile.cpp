@@ -49,7 +49,9 @@ class LightTile : public tessera::Tile {
     w_ = c.width;
     h_ = c.height;
     vertical_ = h_ > w_ * 12 / 10;
+    percent_ = std::string(c.options["percent"] | "show") == "show";
 
+    lv_obj_add_flag(c.parent, LV_OBJ_FLAG_OVERFLOW_VISIBLE);  // the lit part reaches the card's edge, over its padding
     fill_ = lv_obj_create(c.parent);
     lv_obj_remove_style_all(fill_);
     lv_obj_remove_flag(fill_, LV_OBJ_FLAG_SCROLLABLE);
@@ -122,9 +124,8 @@ class LightTile : public tessera::Tile {
     if (dragging_) return;
     set_fill_(info.on ? std::max(info.percent, 4) : 0);
     paint_();
-    ui::set_text(state_, info.unavailable ? plugin_->text("unavailable")
-                         : info.on        ? std::string(plugin_->text("on")) + " · " + std::to_string(info.percent) + " %"
-                                          : plugin_->text("off"));
+    ui::set_text(state_, !percent_ ? "" : info.unavailable ? plugin_->text("unavailable")
+                         : info.on ? std::to_string(info.percent) + " %" : plugin_->text("off"));
     white(state_);
     white(title_);
   }
@@ -133,14 +134,19 @@ class LightTile : public tessera::Tile {
   void set_fill_(int percent) {
     shown_ = std::clamp(percent, 0, 100);
     lv_obj_set_style_opa(fill_, shown_ == 0 ? LV_OPA_TRANSP : LV_OPA_COVER, 0);
+    // The card's whole face (the tile's area and the padding round it): the lit part runs from edge to edge.
+    const int cw = std::max(w_, card_ != nullptr ? (int) lv_obj_get_width(card_) : w_);
+    const int ch = std::max(h_, card_ != nullptr ? (int) lv_obj_get_height(card_) : h_);
+    const int px = (cw - w_) / 2, py = (ch - h_) / 2;
+    lv_obj_set_style_radius(fill_, card_ != nullptr ? lv_obj_get_style_radius(card_, LV_PART_MAIN) : ui::px(14), 0);
     if (vertical_) {
-      const int fh = h_ * shown_ / 100;
-      lv_obj_set_size(fill_, w_, fh);
-      lv_obj_set_pos(fill_, 0, h_ - fh);
-      lv_obj_set_pos(fill_image_, 0, -(h_ - fh));
+      const int fh = ch * shown_ / 100;
+      lv_obj_set_size(fill_, cw, fh);
+      lv_obj_set_pos(fill_, -px, ch - fh - py);
+      lv_obj_set_pos(fill_image_, 0, -(ch - fh));
     } else {
-      lv_obj_set_size(fill_, w_ * shown_ / 100, h_);
-      lv_obj_set_pos(fill_, 0, 0);
+      lv_obj_set_size(fill_, cw * shown_ / 100, ch);
+      lv_obj_set_pos(fill_, -px, -py);
       lv_obj_set_pos(fill_image_, 0, 0);
     }
   }
@@ -153,7 +159,7 @@ class LightTile : public tessera::Tile {
     const uint32_t sign = ((uint32_t) cw * 31 + ch) * 16777619u ^ colour;
     if (sign != signature_) {
       if (!make_(base_px_, base_cap_, base_, cw, ch, lit(colour, 62), lit(colour, 34))) return;
-      if (!make_(lit_px_, lit_cap_, lit_, w_, h_, lit(colour, 190), lit(colour, 125))) return;
+      if (!make_(lit_px_, lit_cap_, lit_, cw, ch, lit(colour, 150), lit(colour, 96))) return;
       signature_ = sign;
       lv_obj_set_style_bg_image_src(card_, nullptr, 0);
       lv_image_set_src(fill_image_, &lit_);
@@ -239,7 +245,7 @@ class LightTile : public tessera::Tile {
       if (dragging_) {
         const int percent = percent_at_(at);
         set_fill_(percent);
-        ui::set_text(state_, std::string(plugin_->text("on")) + " · " + std::to_string(percent) + " %");
+        ui::set_text(state_, percent_ ? std::to_string(percent) + " %" : "");
         white(state_);
       }
     } else if (code == LV_EVENT_RELEASED || code == LV_EVENT_PRESS_LOST) {
@@ -262,7 +268,7 @@ class LightTile : public tessera::Tile {
   lv_obj_t *card_{}, *fill_{}, *fill_image_{}, *state_{}, *title_{}, *hit_{};
   std::string entity_, name_;
   int tile_{-1}, w_{0}, h_{0}, shown_{0};
-  bool vertical_{false}, dragging_{false}, held_{false};
+  bool vertical_{false}, dragging_{false}, held_{false}, percent_{true};
   lv_point_t start_{0, 0};
   uint32_t hold_until_{0}, signature_{0};
   lv_image_dsc_t base_{}, lit_{};
