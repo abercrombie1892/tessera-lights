@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+- A light that is off keeps the colour it last had on the tile (Home Assistant sends none then).
+- The lit part of the tile is drawn into the card's own background picture, no object of its own over the card: its corners
+  and its edge are the card's, to the pixel (it was square and a little inside the card).
+
 ## 0.2.3
 - The menu follows Tessera's own light card in its proportions (measured on a photo of it): fields 48 % of the width,
   11.5 % of the height, the track at the foot of each field, the block a little under the middle, the temperature

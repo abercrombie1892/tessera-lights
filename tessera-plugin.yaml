@@ -2,7 +2,7 @@
 # a short tap switches it, a swipe over the tile dims it, holding opens a menu with the brightness, the colour
 # temperature and colours.
 id: tessera_lights
-version: 0.2.3
+version: 0.3.0
 api: "0.8"
 icon: lightbulb
 maintainer: abercrombie1892
