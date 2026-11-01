@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.3
+- The plugin builds again with the current firmware: a light's colour, colour temperature and brightness go to Home Assistant as a JSON object (the old key and value form is gone).
+
 ## 0.4.2
 - The icon is a white picture with alpha (ARGB) in PSRAM: the display's blitter did not draw the alpha-only picture right.
 
