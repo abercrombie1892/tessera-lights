@@ -6,6 +6,12 @@
 
 namespace esphome::tessera_lights {
 
+template<typename Value> bool turn_on_with(const std::string &entity, const char *field, Value value) {
+  JsonDocument fields;
+  fields[field] = value;
+  return tessera::action("light.turn_on", entity, fields);
+}
+
 // What the plugin knows of one light: set by its tile from Home Assistant's state, read by the menu a hold opens (a
 // card is told only the state and the name, not the attributes).
 struct LightInfo {

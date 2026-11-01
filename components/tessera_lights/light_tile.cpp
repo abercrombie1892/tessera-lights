@@ -288,7 +288,7 @@ class LightTile : public tessera::Tile {
     if (percent <= 0)
       tessera::action("light.turn_off", entity_);
     else
-      tessera::action("light.turn_on", entity_, "brightness_pct", std::to_string(percent));
+      turn_on_with(entity_, "brightness_pct", percent);
   }
 
   void toggle_() {

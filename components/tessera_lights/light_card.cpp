@@ -236,7 +236,7 @@ class LightCard : public tessera::Card {
       card->show_();
     } else if (code == LV_EVENT_RELEASED) {
       card->hold_until_ = millis() + HOLD_MS;
-      tessera::action("light.turn_on", card->entity_, "color_name", name_of_hue(lv_slider_get_value(card->hue_)));
+      turn_on_with(card->entity_, "color_name", name_of_hue(lv_slider_get_value(card->hue_)));
     }
   }
 
@@ -247,7 +247,7 @@ class LightCard : public tessera::Card {
       card->show_();
     } else if (code == LV_EVENT_RELEASED) {
       card->hold_until_ = millis() + HOLD_MS;
-      tessera::action("light.turn_on", card->entity_, "color_temp_kelvin", std::to_string(lv_slider_get_value(card->temp_)));
+      turn_on_with(card->entity_, "color_temp_kelvin", static_cast<int>(lv_slider_get_value(card->temp_)));
     }
   }
 
@@ -261,7 +261,7 @@ class LightCard : public tessera::Card {
       info.on = true;
       info.percent = lv_slider_get_value(card->bright_);
       card->hold_until_ = millis() + HOLD_MS;
-      tessera::action("light.turn_on", card->entity_, "brightness_pct", std::to_string(info.percent));
+      turn_on_with(card->entity_, "brightness_pct", static_cast<int>(info.percent));
     }
   }
 
